@@ -33,7 +33,7 @@ impl CommandHandler for PowerControl<'_> {
         } else {
             power.set_low();
         }
-        
+
         Response {
             id,
             status: EnumValue::Known(Status::Ok),

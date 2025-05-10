@@ -2,6 +2,7 @@
 name = "usb-comms"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 
 [dependencies]
 embassy-stm32 = { version = "0.2.0", features = ["defmt", "stm32f429zi", "unstable-pac", "memory-x", "time-driver-tim4", "exti", "chrono"] }
