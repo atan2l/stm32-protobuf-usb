@@ -1,6 +1,5 @@
 #![no_std]
 #![no_main]
-extern crate alloc;
 
 mod command_handler;
 mod comms;
@@ -12,19 +11,15 @@ use crate::context::Context;
 use crate::dispatcher::command_dispatcher;
 use crate::usb_task::usb_task;
 use embassy_executor::Spawner;
+use embassy_stm32::gpio::{Level, Output, Speed};
 use embassy_stm32::time::Hertz;
 use embassy_stm32::usb::Driver;
 use embassy_stm32::{bind_interrupts, peripherals, usb, Config};
-use embassy_stm32::gpio::{Level, Output, Speed};
 use embassy_sync::mutex::Mutex;
 use embassy_usb::class::cdc_acm::{CdcAcmClass, State};
 use embassy_usb::Builder;
-use embedded_alloc::LlffHeap as Heap;
 use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
-
-#[global_allocator]
-static HEAP: Heap = Heap::empty();
 
 static EP_OUT_BUFFER: StaticCell<[u8; 256]> = StaticCell::new();
 static CONFIG_DESCRIPTOR: StaticCell<[u8; 256]> = StaticCell::new();
@@ -47,15 +42,6 @@ mod response {
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    {
-        use core::mem::MaybeUninit;
-        const HEAP_SIZE: usize = 8 * 1024;
-        static mut HEAP_MEM: [MaybeUninit<u8>; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
-        unsafe {
-            HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE);
-        }
-    }
-
     let mut config = Config::default();
     {
         use embassy_stm32::rcc::*;

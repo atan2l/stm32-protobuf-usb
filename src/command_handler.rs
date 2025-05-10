@@ -1,14 +1,14 @@
 use crate::command::*;
 use crate::context::Context;
 use crate::response::*;
-use alloc::vec::Vec;
-use prost::Message;
+use femtopb::{EnumValue, Message};
+use heapless::Vec;
 
 pub trait CommandHandler {
     async fn handle(&self, id: u32, ctx: &Context) -> Response;
 }
 
-impl CommandHandler for SetLed {
+impl CommandHandler for SetLed<'_> {
     async fn handle(&self, id: u32, ctx: &Context) -> Response {
         let mut led = ctx.led.lock().await;
         if self.on {
@@ -19,29 +19,31 @@ impl CommandHandler for SetLed {
 
         Response {
             id,
-            status: Status::Ok.into(),
+            status: EnumValue::Known(Status::Ok),
+            ..Default::default()
         }
     }
 }
 
-impl CommandHandler for PowerControl {
+impl CommandHandler for PowerControl<'_> {
     async fn handle(&self, id: u32, ctx: &Context) -> Response {
         todo!()
     }
 }
 
-pub async fn dispatch_command(cmd: Command, ctx: &Context) -> Option<Vec<u8>> {
+pub async fn dispatch_command(cmd: Command<'_>, ctx: &Context) -> Option<Vec<u8, 64>> {
     let resp = match cmd.action {
         Some(command::Action::SetLed(ref led)) => led.handle(cmd.id, ctx).await,
         Some(command::Action::PowerControl(ref power)) => power.handle(cmd.id, ctx).await,
-        None => Response {
+        _ => Response {
             id: cmd.id,
-            status: Status::Invalid.into(),
+            status: EnumValue::Known(Status::Invalid),
+            ..Default::default()
         },
     };
 
-    let mut buf = Vec::with_capacity(resp.encoded_len());
-    if resp.encode(&mut buf).is_ok() {
+    let mut buf = Vec::new();
+    if resp.encode(&mut buf.as_mut_slice()).is_ok() {
         Some(buf)
     } else {
         None
