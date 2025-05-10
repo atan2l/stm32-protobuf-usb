@@ -11,7 +11,7 @@ pub async fn command_dispatcher(ctx: &'static Context) {
 
     loop {
         if let Ok(pkt) = rx.try_receive() {
-            if let Ok(cmd) = Command::decode(&pkt[..]) {
+            if let Ok(cmd) = Command::decode(&pkt) {
                 if let Some(reply) = dispatch_command(cmd, ctx).await {
                     let _ = tx.send(reply).await;
                 }
