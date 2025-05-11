@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package command;
+package stm32_command;
 
 message Command {
   uint32 id = 1;

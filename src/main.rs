@@ -33,11 +33,11 @@ bind_interrupts!(struct Irqs {
 });
 
 mod command {
-    include!(concat!(env!("OUT_DIR"), "/command.rs"));
+    include!(concat!(env!("OUT_DIR"), "/stm32_command.rs"));
 }
 
 mod response {
-    include!(concat!(env!("OUT_DIR"), "/response.rs"));
+    include!(concat!(env!("OUT_DIR"), "/stm32_response.rs"));
 }
 
 #[embassy_executor::main]
