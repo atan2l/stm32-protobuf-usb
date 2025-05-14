@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-embassy-stm32 = { version = "0.2.0", features = ["defmt", "stm32f429zi", "unstable-pac", "memory-x", "time-driver-tim4", "exti", "chrono"] }
+embassy-stm32 = { version = "0.2.0", features = ["defmt", "stm32f411ce", "unstable-pac", "memory-x", "time-driver-tim4", "exti", "chrono"] }
 embassy-sync = { version = "0.6.2", features = ["defmt"] }
 embassy-executor = { version = "0.7.0", features = ["arch-cortex-m", "executor-thread", "executor-interrupt", "defmt"] }
 embassy-usb = { version = "0.4.0", features = ["defmt"] }
@@ -19,7 +19,7 @@ defmt-rtt = "1.0.0"
 
 cortex-m = { version = "0.7.7", features = ["inline-asm", "critical-section-single-core"] }
 cortex-m-rt = "0.7.5"
-panic-probe = "1.0.0"
+panic-probe = { version = "1.0.0", features = ["print-defmt"] }
 
 [build-dependencies]
 femtopb-build = "0.8.0"

@@ -7,6 +7,7 @@ mod context;
 mod dispatcher;
 mod usb_task;
 
+use defmt::info;
 use crate::context::Context;
 use crate::dispatcher::command_dispatcher;
 use crate::usb_task::usb_task;
@@ -46,15 +47,15 @@ async fn main(spawner: Spawner) {
     {
         use embassy_stm32::rcc::*;
         config.rcc.hse = Some(Hse {
-            freq: Hertz(8_000_000),
-            mode: HseMode::Bypass,
+            freq: Hertz(25_000_000),
+            mode: HseMode::Oscillator,
         });
         config.rcc.pll_src = PllSource::HSE;
         config.rcc.pll = Some(Pll {
-            prediv: PllPreDiv::DIV4,
-            mul: PllMul::MUL168,
-            divp: Some(PllPDiv::DIV2), // 8mhz / 4 * 168 / 2 = 168Mhz.
-            divq: Some(PllQDiv::DIV7), // 8mhz / 4 * 168 / 7 = 48Mhz.
+            prediv: PllPreDiv::DIV25,
+            mul: PllMul::MUL384,
+            divp: Some(PllPDiv::DIV4), // 25mhz / 25 * 384 / 4 = 96Mhz.
+            divq: Some(PllQDiv::DIV8), // 25mhz / 25 * 384 / 8 = 48Mhz.
             divr: None,
         });
         config.rcc.ahb_pre = AHBPrescaler::DIV1;
@@ -92,7 +93,7 @@ async fn main(spawner: Spawner) {
         config,
     );
 
-    let mut usb_device_config = embassy_usb::Config::new(0xc0de, 0xcafe);
+    let mut usb_device_config = embassy_usb::Config::new(0x2341, 0x8036);
     usb_device_config.manufacturer = Some("Embassy");
     usb_device_config.product = Some("USB-Serial-Prototype");
     usb_device_config.serial_number = Some("1234567890");
@@ -121,5 +122,6 @@ async fn main(spawner: Spawner) {
     spawner.spawn(usb_task(class)).unwrap();
     spawner.spawn(command_dispatcher(ctx)).unwrap();
 
+    info!("Running USB controller");
     usb.run().await;
 }
