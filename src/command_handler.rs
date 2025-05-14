@@ -2,7 +2,6 @@ use crate::command::*;
 use crate::context::Context;
 use crate::response::*;
 use femtopb::{EnumValue, Message};
-use heapless::Vec;
 
 pub trait CommandHandler {
     async fn handle(&self, id: u32, ctx: &Context) -> Response;
@@ -42,7 +41,7 @@ impl CommandHandler for PowerControl<'_> {
     }
 }
 
-pub async fn dispatch_command(cmd: Command<'_>, ctx: &Context) -> Option<Vec<u8, 64>> {
+pub async fn dispatch_command(cmd: Command<'_>, ctx: &Context) -> Option<[u8; 64]> {
     let resp = match cmd.action {
         Some(command::Action::SetLed(ref led)) => led.handle(cmd.id, ctx).await,
         Some(command::Action::PowerControl(ref power)) => power.handle(cmd.id, ctx).await,
@@ -53,8 +52,8 @@ pub async fn dispatch_command(cmd: Command<'_>, ctx: &Context) -> Option<Vec<u8,
         },
     };
 
-    let mut buf = Vec::new();
-    if resp.encode(&mut buf.as_mut_slice()).is_ok() {
+    let mut buf = [0; 64];
+    if resp.encode(&mut &mut buf[..]).is_ok() {
         Some(buf)
     } else {
         None
