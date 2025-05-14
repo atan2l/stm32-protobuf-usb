@@ -7,10 +7,9 @@ mod context;
 mod dispatcher;
 mod usb_task;
 
-use defmt::info;
 use crate::context::Context;
 use crate::dispatcher::command_dispatcher;
-use crate::usb_task::usb_task;
+use crate::usb_task::{usb_run, usb_task};
 use embassy_executor::Spawner;
 use embassy_stm32::gpio::{Level, Output, Speed};
 use embassy_stm32::time::Hertz;
@@ -93,7 +92,7 @@ async fn main(spawner: Spawner) {
         config,
     );
 
-    let mut usb_device_config = embassy_usb::Config::new(0x2341, 0x8036);
+    let mut usb_device_config = embassy_usb::Config::new(0xc0de, 0xcafe);
     usb_device_config.manufacturer = Some("Embassy");
     usb_device_config.product = Some("USB-Serial-Prototype");
     usb_device_config.serial_number = Some("1234567890");
@@ -117,11 +116,9 @@ async fn main(spawner: Spawner) {
     );
 
     let class = CdcAcmClass::new(&mut builder, state, 64);
-    let mut usb = builder.build();
+    let usb = builder.build();
 
+    spawner.spawn(usb_run(usb)).unwrap();
     spawner.spawn(usb_task(class)).unwrap();
     spawner.spawn(command_dispatcher(ctx)).unwrap();
-
-    info!("Running USB controller");
-    usb.run().await;
 }
