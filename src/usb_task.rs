@@ -24,9 +24,16 @@ pub async fn usb_task(mut cdc: CdcAcmClass<'static, Driver<'static, USB_OTG_FS>>
                     } else {
                         break;
                     }
-                },
+                }
                 Either::Second(reply) => {
                     let _ = cdc.write_packet(&reply).await;
+                    if reply.len() == 64 { 
+                        /*
+                         * The previous packet is full. We need to send an empty packet to mark
+                         * the end of data transmission.
+                         */
+                        let _ = cdc.write_packet(&[]).await;
+                    }
                 }
             }
         }

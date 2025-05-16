@@ -67,7 +67,7 @@ async fn main(spawner: Spawner) {
     let peripherals = embassy_stm32::init(config);
 
     let ctx = CTX.init(Context {
-        led: Mutex::new(Output::new(peripherals.PA5, Level::Low, Speed::Low)),
+        led: Mutex::new(Output::new(peripherals.PC13, Level::Low, Speed::Low)),
         power: Mutex::new(Output::new(peripherals.PA6, Level::Low, Speed::Low)),
     });
 

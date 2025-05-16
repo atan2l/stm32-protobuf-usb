@@ -1,4 +1,5 @@
 use crate::command::*;
+use crate::comms::Packet;
 use crate::context::Context;
 use crate::response::*;
 use femtopb::{EnumValue, Message};
@@ -41,7 +42,7 @@ impl CommandHandler for PowerControl<'_> {
     }
 }
 
-pub async fn dispatch_command(cmd: Command<'_>, ctx: &Context) -> Option<[u8; 64]> {
+pub async fn dispatch_command(cmd: Command<'_>, ctx: &Context) -> Option<Packet> {
     let resp = match cmd.action {
         Some(command::Action::SetLed(ref led)) => led.handle(cmd.id, ctx).await,
         Some(command::Action::PowerControl(ref power)) => power.handle(cmd.id, ctx).await,
@@ -52,8 +53,10 @@ pub async fn dispatch_command(cmd: Command<'_>, ctx: &Context) -> Option<[u8; 64
         },
     };
 
-    let mut buf = [0; 64];
-    if resp.encode(&mut &mut buf[..]).is_ok() {
+    let mut buf = Packet::new();
+    let _ = buf.resize_default(64);
+    if resp.encode_length_delimited(&mut &mut buf[..]).is_ok() {
+        buf.truncate(resp.encoded_len());
         Some(buf)
     } else {
         None
