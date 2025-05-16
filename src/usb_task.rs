@@ -18,16 +18,16 @@ pub async fn usb_task(mut cdc: CdcAcmClass<'static, Driver<'static, USB_OTG_FS>>
             match select(cdc.read_packet(&mut buf), tx.receive()).await {
                 Either::First(read_result) => {
                     if let Ok(n) = read_result {
-                        let mut pkt = Packet::new();
-                        pkt.extend_from_slice(&buf[..n]).ok();
-                        let _ = rx.send(pkt).await;
+                        if let Ok(pkt) = Packet::from_slice(&buf[..n]) {
+                            let _ = rx.send(pkt).await;
+                        }
                     } else {
                         break;
                     }
                 }
                 Either::Second(reply) => {
                     let _ = cdc.write_packet(&reply).await;
-                    if reply.len() == 64 { 
+                    if reply.len() == 64 {
                         /*
                          * The previous packet is full. We need to send an empty packet to mark
                          * the end of data transmission.
