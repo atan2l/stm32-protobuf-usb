@@ -12,12 +12,16 @@ use crate::dispatcher::command_dispatcher;
 use crate::usb_task::{usb_run, usb_task};
 use embassy_executor::Spawner;
 use embassy_stm32::gpio::{Level, Output, Speed};
+use embassy_stm32::i2c::I2c;
 use embassy_stm32::time::Hertz;
 use embassy_stm32::usb::Driver;
-use embassy_stm32::{bind_interrupts, peripherals, usb, Config};
+use embassy_stm32::{bind_interrupts, i2c, peripherals, usb, Config};
 use embassy_sync::mutex::Mutex;
 use embassy_usb::class::cdc_acm::{CdcAcmClass, State};
 use embassy_usb::Builder;
+use ssd1306::prelude::DisplayRotation;
+use ssd1306::size::DisplaySize128x64;
+use ssd1306::{I2CDisplayInterface, Ssd1306Async};
 use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
 
@@ -30,6 +34,8 @@ static CTX: StaticCell<Context> = StaticCell::new();
 
 bind_interrupts!(struct Irqs {
     OTG_FS => usb::InterruptHandler<peripherals::USB_OTG_FS>;
+    I2C1_EV => i2c::EventInterruptHandler<peripherals::I2C1>;
+    I2C1_ER => i2c::ErrorInterruptHandler<peripherals::I2C1>;
 });
 
 mod command {
@@ -66,9 +72,25 @@ async fn main(spawner: Spawner) {
 
     let peripherals = embassy_stm32::init(config);
 
+    let i2c1 = I2c::new(
+        peripherals.I2C1,
+        peripherals.PB8,
+        peripherals.PB7,
+        Irqs,
+        peripherals.DMA1_CH6,
+        peripherals.DMA1_CH0,
+        Hertz(100_000),
+        Default::default(),
+    );
+
+    let interface = I2CDisplayInterface::new(i2c1);
+    let display = Ssd1306Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+        .into_buffered_graphics_mode();
+
     let ctx = CTX.init(Context {
         led: Mutex::new(Output::new(peripherals.PC13, Level::Low, Speed::Low)),
         power: Mutex::new(Output::new(peripherals.PA6, Level::Low, Speed::Low)),
+        display: Mutex::new(display),
     });
 
     // Create the driver, from the HAL
