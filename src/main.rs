@@ -88,7 +88,7 @@ async fn main(spawner: Spawner) {
         .into_buffered_graphics_mode();
 
     let ctx = CTX.init(Context {
-        led: Mutex::new(Output::new(peripherals.PC13, Level::Low, Speed::Low)),
+        led: Mutex::new(Output::new(peripherals.PC13, Level::High, Speed::Low)),
         power: Mutex::new(Output::new(peripherals.PA6, Level::Low, Speed::Low)),
         display: Mutex::new(display),
     });

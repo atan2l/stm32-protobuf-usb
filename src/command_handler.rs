@@ -2,7 +2,6 @@ use crate::command::*;
 use crate::comms::ProtoMessage;
 use crate::context::Context;
 use crate::response::*;
-use embedded_graphics::Drawable;
 use femtopb::{EnumValue, Message};
 
 pub trait CommandHandler {
@@ -13,9 +12,9 @@ impl CommandHandler for SetLed<'_> {
     async fn handle(&self, id: u32, ctx: &Context) -> Response {
         let mut led = ctx.led.lock().await;
         if self.on {
-            led.set_high();
-        } else {
             led.set_low();
+        } else {
+            led.set_high();
         }
 
         Response {
@@ -53,6 +52,7 @@ impl CommandHandler for PrintMessage<'_> {
         };
         let display = &mut *ctx.display.lock().await;
         let style = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
+        let _ = display.clear(BinaryColor::Off);
         if Text::new(self.message, Point::new(0, 0), style)
             .draw(display)
             .is_ok()
