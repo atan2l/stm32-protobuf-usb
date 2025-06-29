@@ -4,11 +4,12 @@
 mod command_handler;
 mod comms;
 mod context;
-mod dispatcher;
+mod command_dispatcher;
 mod usb_task;
+mod commands;
 
 use crate::context::Context;
-use crate::dispatcher::command_dispatcher;
+use crate::command_dispatcher::command_dispatcher;
 use crate::usb_task::{usb_run, usb_task};
 use embassy_executor::Spawner;
 use embassy_stm32::gpio::{Level, Output, Speed};
