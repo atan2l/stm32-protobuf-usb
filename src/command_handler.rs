@@ -5,11 +5,11 @@ use crate::response::*;
 use femtopb::{EnumValue, Message};
 
 pub trait CommandHandler {
-    async fn handle(&self, id: u32, ctx: &Context) -> Response;
+    async fn handle(&self, id: u32, ctx: &Context) -> Response<'_>;
 }
 
 impl CommandHandler for SetLed<'_> {
-    async fn handle(&self, id: u32, ctx: &Context) -> Response {
+    async fn handle(&self, id: u32, ctx: &Context) -> Response<'_> {
         let mut led = ctx.led.lock().await;
         if self.on {
             led.set_low();
@@ -26,7 +26,7 @@ impl CommandHandler for SetLed<'_> {
 }
 
 impl CommandHandler for PowerControl<'_> {
-    async fn handle(&self, id: u32, ctx: &Context) -> Response {
+    async fn handle(&self, id: u32, ctx: &Context) -> Response<'_> {
         let mut power = ctx.power.lock().await;
         if self.enable {
             power.set_high();
@@ -43,7 +43,7 @@ impl CommandHandler for PowerControl<'_> {
 }
 
 impl CommandHandler for PrintMessage<'_> {
-    async fn handle(&self, id: u32, ctx: &Context) -> Response {
+    async fn handle(&self, id: u32, ctx: &Context) -> Response<'_> {
         use embedded_graphics::{
             mono_font::{ascii::FONT_6X10, MonoTextStyle},
             pixelcolor::BinaryColor,
@@ -53,7 +53,7 @@ impl CommandHandler for PrintMessage<'_> {
         let display = &mut *ctx.display.lock().await;
         let style = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
         let _ = display.clear(BinaryColor::Off);
-        if Text::new(self.message, Point::new(0, 0), style)
+        if Text::new(self.message, Point::zero(), style)
             .draw(display)
             .is_ok()
         {
