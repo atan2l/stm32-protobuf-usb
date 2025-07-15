@@ -34,7 +34,7 @@ async fn dispatch_command(cmd: Command<'_>, ctx: &Context) -> Option<ProtoMessag
 
     let mut buf = ProtoMessage::new();
     let _ = buf.resize_default(buf.capacity());
-    if resp.encode(&mut &mut buf[..]).is_ok() {
+    if resp.encode(&mut &mut *buf).is_ok() {
         buf.truncate(resp.encoded_len());
         Some(buf)
     } else {

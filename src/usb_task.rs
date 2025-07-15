@@ -27,10 +27,16 @@ pub async fn usb_task(mut cdc: CdcAcmClass<'static, Driver<'static, USB_OTG_FS>>
                     }
                 }
                 Either::Second(reply) => {
-                    let _ = cdc.write_packet(&reply).await;
-                    if reply.len() == reply.capacity() {
+                    // Send the reply 64-byte chunks at a time.
+                    let mut last_chunk = Default::default();
+                    for chunk in reply.chunks(cdc.max_packet_size() as usize) {
+                        let _ = cdc.write_packet(chunk).await;
+                        last_chunk = chunk;
+                    }
+
+                    if last_chunk.len() == cdc.max_packet_size() as usize {
                         /*
-                         * The previous packet is full. We need to send an empty packet to mark
+                         * The last packet is full. We need to send an empty packet to mark
                          * the end of data transmission.
                          */
                         let _ = cdc.write_packet(&[]).await;
