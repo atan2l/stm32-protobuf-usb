@@ -1,8 +1,9 @@
-use femtopb::EnumValue;
 use crate::command::PrintMessage;
 use crate::command_handler::CommandHandler;
 use crate::context::Context;
 use crate::response::{Response, Status};
+use embedded_graphics::text::Baseline;
+use femtopb::EnumValue;
 
 impl CommandHandler for PrintMessage<'_> {
     async fn handle(&self, id: u32, ctx: &Context) -> Response<'_> {
@@ -14,10 +15,11 @@ impl CommandHandler for PrintMessage<'_> {
         };
         let display = &mut *ctx.display.lock().await;
         let style = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
-        let _ = display.clear(BinaryColor::Off);
-        if Text::new(self.message, Point::zero(), style)
-            .draw(display)
-            .is_ok()
+        if display.clear(BinaryColor::Off).is_ok()
+            && Text::with_baseline(self.message, Point::zero(), style, Baseline::Top)
+                .draw(display)
+                .is_ok()
+            && display.flush().await.is_ok()
         {
             Response {
                 id,

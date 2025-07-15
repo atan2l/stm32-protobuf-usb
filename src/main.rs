@@ -20,7 +20,10 @@ use embassy_stm32::{bind_interrupts, i2c, peripherals, usb, Config};
 use embassy_sync::mutex::Mutex;
 use embassy_usb::class::cdc_acm::{CdcAcmClass, State};
 use embassy_usb::Builder;
-use ssd1306::prelude::DisplayRotation;
+use embedded_graphics::draw_target::DrawTarget;
+use embedded_graphics::pixelcolor::BinaryColor;
+use ssd1306::command::AddrMode;
+use ssd1306::prelude::{Brightness, DisplayRotation};
 use ssd1306::size::DisplaySize128x64;
 use ssd1306::{I2CDisplayInterface, Ssd1306Async};
 use static_cell::StaticCell;
@@ -80,13 +83,19 @@ async fn main(spawner: Spawner) {
         Irqs,
         peripherals.DMA1_CH6,
         peripherals.DMA1_CH0,
-        Hertz(100_000),
+        Hertz(400_000),
         Default::default(),
     );
 
     let interface = I2CDisplayInterface::new(i2c1);
-    let display = Ssd1306Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+    let mut display = Ssd1306Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
+    display
+        .init_with_addr_mode(AddrMode::Horizontal)
+        .await
+        .unwrap();
+    display.clear(BinaryColor::Off).unwrap();
+    display.flush().await.unwrap();
 
     let ctx = CTX.init(Context {
         led: Mutex::new(Output::new(peripherals.PC13, Level::High, Speed::Low)),
